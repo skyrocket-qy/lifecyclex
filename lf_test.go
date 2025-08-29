@@ -20,14 +20,17 @@ func TestSimpleLifecycle(t *testing.T) {
 
 	lc.Add(func(ctx context.Context) error {
 		order = append(order, 1)
+
 		return nil
 	})
 	lc.Add(func(ctx context.Context) error {
 		order = append(order, 2)
+
 		return nil
 	})
 	lc.Add(func(ctx context.Context) error {
 		order = append(order, 3)
+
 		return nil
 	})
 
@@ -47,18 +50,22 @@ func TestSimpleLifecycle_Error(t *testing.T) {
 	lc := lifecyclex.NewSimpleLifecycle()
 
 	var order []int
+
 	testErr := errors.New("test error")
 
 	lc.Add(func(ctx context.Context) error {
 		order = append(order, 1)
+
 		return nil
 	})
 	lc.Add(func(ctx context.Context) error {
 		order = append(order, 2)
+
 		return testErr
 	})
 	lc.Add(func(ctx context.Context) error {
 		order = append(order, 3)
+
 		return nil
 	})
 
@@ -99,9 +106,12 @@ func TestLifecycleParallel(t *testing.T) {
 	closer := func(a app) lifecyclex.Closer {
 		return func(ctx context.Context) error {
 			time.Sleep(10 * time.Millisecond)
+
 			mu.Lock()
 			defer mu.Unlock()
+
 			closeOrder = append(closeOrder, closeEvent{app: a, closedAt: time.Now()})
+
 			return nil
 		}
 	}
@@ -128,9 +138,11 @@ func TestLifecycleParallel(t *testing.T) {
 	if closedAt[appB].Before(closedAt[appA]) {
 		t.Errorf("App B should be closed after App A")
 	}
+
 	if closedAt[appC].Before(closedAt[appA]) {
 		t.Errorf("App C should be closed after App A")
 	}
+
 	if closedAt[appD].Before(closedAt[appB]) {
 		t.Errorf("App D should be closed after App B")
 	}
@@ -174,7 +186,9 @@ func TestLifecycleParallel_Error(t *testing.T) {
 		return func(ctx context.Context) error {
 			closedLock.Lock()
 			defer closedLock.Unlock()
+
 			closed = append(closed, a)
+
 			return err
 		}
 	}
