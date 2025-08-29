@@ -87,6 +87,48 @@ func main() {
 }
 ```
 
+### LifecycleAI (AI-Powered)
+
+`LifecycleAI` provides an "intelligent" shutdown mechanism that infers component dependencies based on their names. This avoids the need for manual dependency configuration. It uses a heuristic-based approach to determine the shutdown order.
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/skyrocket-qy/lifecyclex"
+	"time"
+)
+
+func main() {
+	lc := lifecyclex.NewLifecycleAI()
+
+	lc.Add("database", func() error {
+		fmt.Println("Closing DB connection")
+		time.Sleep(100 * time.Millisecond)
+		return nil
+	})
+
+	lc.Add("http-server", func() error {
+		fmt.Println("Stopping server")
+		time.Sleep(50 * time.Millisecond)
+		return nil
+	})
+
+	lc.Add("cache", func() error {
+		fmt.Println("Closing cache")
+		time.Sleep(20 * time.Millisecond)
+		return nil
+	})
+
+	// The shutdown order will be inferred: server, then cache, then database.
+	if err := lc.Shutdown(context.Background()); err != nil {
+		fmt.Printf("Shutdown failed: %v\n", err)
+	}
+}
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to open an issue or submit a pull request.
