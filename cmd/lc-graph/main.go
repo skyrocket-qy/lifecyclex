@@ -14,53 +14,72 @@ func main() {
 	if len(os.Args) < 2 {
 		log.Fatal("Usage: lc-graph <path>")
 	}
+
 	path := os.Args[1]
 
-	fmt.Println("digraph shutdown_graph {")
+	if _, err := os.Stdout.WriteString("digraph shutdown_graph {\n"); err != nil {
+		log.Fatal(err)
+	}
+
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+
 		if !info.IsDir() && filepath.Ext(path) == ".go" {
 			parseFile(path)
 		}
+
 		return nil
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("}")
+
+	if _, err := os.Stdout.WriteString("}\n"); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func parseFile(filename string) {
 	fset := token.NewFileSet()
+
 	node, err := parser.ParseFile(fset, filename, nil, 0)
 	if err != nil {
 		log.Println(err)
+
 		return
 	}
 
 	ast.Inspect(node, func(n ast.Node) bool {
-		if call, ok := n.(*ast.CallExpr); ok {
-			if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
-				if sel.Sel.Name == "Add" {
-					// This is a simplistic check. A real implementation would need to
-					// track the type of the receiver of the 'Add' call to ensure
-					// it's a *LifecycleParallel.
-					if len(call.Args) > 1 {
-						appName := getAppName(call.Args[0])
-						if appName != "" {
-							for _, dep := range call.Args[2:] {
-								depName := getAppName(dep)
-								if depName != "" {
-									fmt.Printf(`  "%s" -> "%s";`, appName, depName)
-								}
-							}
-						}
-					}
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+
+		sel, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok || sel.Sel.Name != "Add" {
+			return true
+		}
+
+		if len(call.Args) <= 1 {
+			return true
+		}
+
+		appName := getAppName(call.Args[0])
+		if appName == "" {
+			return true
+		}
+
+		for _, dep := range call.Args[2:] {
+			depName := getAppName(dep)
+			if depName != "" {
+				if _, err := os.Stdout.WriteString(fmt.Sprintf(`  "%s" -> "%s";`, appName, depName) + "\n"); err != nil {
+					log.Fatal(err)
 				}
 			}
 		}
+
 		return true
 	})
 }
@@ -72,5 +91,6 @@ func getAppName(expr ast.Expr) string {
 	case *ast.Ident:
 		return v.Name
 	}
+
 	return ""
 }

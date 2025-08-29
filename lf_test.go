@@ -11,19 +11,25 @@ import (
 )
 
 func TestSimpleLifecycle(t *testing.T) {
+	t.Parallel()
+
 	lc := lifecyclex.NewSimpleLifecycle()
+
 	var order []int
 
 	lc.Add(func(ctx context.Context) error {
 		order = append(order, 1)
+
 		return nil
 	})
 	lc.Add(func(ctx context.Context) error {
 		order = append(order, 2)
+
 		return nil
 	})
 	lc.Add(func(ctx context.Context) error {
 		order = append(order, 3)
+
 		return nil
 	})
 
@@ -45,6 +51,8 @@ type closeEvent struct {
 }
 
 func TestLifecycleParallel(t *testing.T) {
+	t.Parallel()
+
 	lc := lifecyclex.NewLifecycleParallel()
 
 	var (
@@ -62,9 +70,12 @@ func TestLifecycleParallel(t *testing.T) {
 		return func(ctx context.Context) error {
 			// Simulate work
 			time.Sleep(10 * time.Millisecond)
+
 			mu.Lock()
 			defer mu.Unlock()
+
 			closeOrder = append(closeOrder, closeEvent{app: a, closedAt: time.Now()})
+
 			return nil
 		}
 	}
@@ -97,6 +108,7 @@ func TestLifecycleParallel(t *testing.T) {
 	if closedAt[appB].Before(closedAt[appA]) {
 		t.Errorf("App B should be closed after App A, but was closed before")
 	}
+
 	if closedAt[appC].Before(closedAt[appA]) {
 		t.Errorf("App C should be closed after App A, but was closed before")
 	}
