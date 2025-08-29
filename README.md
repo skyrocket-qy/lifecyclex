@@ -1,7 +1,7 @@
 # lifecyclex
 
 <p align="center">
-  <a href="https://github.com/skyrocket-qy/authz/actions/workflows/ci.yml"><img src="https://github.com/skyrocket-qy/authz/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
+  <a href="https://github.com/skyrocket-qy/lifecyclex/actions/workflows/ci.yml"><img src="https://github.com/skyrocket-qy/lifecyclex/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
   <a href="#"><img src="https://img.shields.io/badge/coverage-96.0%25-brightgreen" alt="Coverage"></a>
 </p>
 
