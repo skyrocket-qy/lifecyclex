@@ -1,4 +1,4 @@
-package main
+package lifecyclex_test
 
 import (
 	"context"
@@ -6,10 +6,12 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/skyrocket-qy/lifecyclex"
 )
 
 func TestSimpleLifecycle(t *testing.T) {
-	lc := NewSimpleLifecycle()
+	lc := lifecyclex.NewSimpleLifecycle()
 	var order []int
 
 	lc.Add(func(ctx context.Context) error {
@@ -43,7 +45,7 @@ type closeEvent struct {
 }
 
 func TestLifecycleParallel(t *testing.T) {
-	lc := NewLifecycleParallel()
+	lc := lifecyclex.NewLifecycleParallel()
 
 	var (
 		mu         sync.Mutex
@@ -56,7 +58,7 @@ func TestLifecycleParallel(t *testing.T) {
 	appD := app("D")
 	appE := app("E") // No deps, no one depends on it
 
-	closer := func(a app) Closer {
+	closer := func(a app) lifecyclex.Closer {
 		return func(ctx context.Context) error {
 			// Simulate work
 			time.Sleep(10 * time.Millisecond)
