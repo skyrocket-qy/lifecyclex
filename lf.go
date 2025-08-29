@@ -87,6 +87,9 @@ func (l *LifecycleParallel) Shutdown(c context.Context) error {
 		firstErr atomic.Value
 	)
 
+	ctx, cancel := context.WithCancel(c)
+	defer cancel()
+
 	wg.Add(len(l.readyCh))
 
 	go func() {
@@ -98,19 +101,22 @@ func (l *LifecycleParallel) Shutdown(c context.Context) error {
 		go func(app any) {
 			defer wg.Done()
 
-			if firstErr.Load() != nil {
+			if ctx.Err() != nil {
 				return
 			}
 
 			if closer, ok := l.appCloser[app]; ok {
-				if err := closer(c); err != nil {
+				if err := closer(ctx); err != nil {
 					firstErr.Store(err)
-
+					cancel()
 					return
 				}
 			}
 
 			for _, up := range l.appUpstreams[app] {
+				if ctx.Err() != nil {
+					return
+				}
 				l.appIndegreesMutex.Lock()
 				l.appIndegrees[up]--
 				v := l.appIndegrees[up]
@@ -118,7 +124,6 @@ func (l *LifecycleParallel) Shutdown(c context.Context) error {
 
 				if v == 0 {
 					wg.Add(1)
-
 					l.readyCh <- up
 				}
 			}
@@ -126,11 +131,7 @@ func (l *LifecycleParallel) Shutdown(c context.Context) error {
 	}
 
 	if err := firstErr.Load(); err != nil {
-		if err, ok := err.(error); ok {
-			return erx.W(err)
-		}
-
-		return erx.Newf(erx.ErrUnknown, "failed to shutdown: %v", err)
+		return erx.W(err.(error))
 	}
 
 	return nil
