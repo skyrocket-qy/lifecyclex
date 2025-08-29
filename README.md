@@ -1,5 +1,11 @@
 # lifecyclex
 
+<p align="center">
+  <a href="https://github.com/skyrocket-qy/authz/actions/workflows/ci.yml"><img src="https://github.com/skyrocket-qy/authz/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
+  <a href="#"><img src="https://img.shields.io/badge/coverage-53.7%25-brightgreen" alt="Coverage"></a>
+  <a href="https://github.com/skyrocket-qy/authz/releases"><img src="https://img.shields.io/github/v/release/skyrocket-qy/authz.svg" alt="Release"></a>
+</p>
+
 `lifecyclex` is a Go library that provides utilities for managing application lifecycle, specifically for shutting down components in a structured and safe manner. It offers different strategies for sequential and parallel shutdown of application components based on their dependencies.
 
 ## Features
