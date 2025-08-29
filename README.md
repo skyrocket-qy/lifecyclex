@@ -98,58 +98,10 @@ func main() {
 }
 ```
 
-### LifecycleParallelSyncMap
-
-`LifecycleParallelSyncMap` is another implementation for parallel shutdown, which uses `sync.Map` for managing dependencies. This can be more efficient in highly concurrent scenarios.
-
-```go
-package main
-
-import (
-	"fmt"
-	"github.com/skyrocket-qy/lifecyclex"
-	"time"
-)
-
-func main() {
-	lc := lifecyclex.NewLifecycleParallelSyncMap()
-
-	db := "database"
-	server := "server"
-	cache := "cache"
-
-	lc.Add(db, func() error {
-		fmt.Println("Closing DB connection")
-		time.Sleep(100 * time.Millisecond)
-		return nil
-	})
-
-	lc.Add(server, func() error {
-		fmt.Println("Stopping server")
-		time.Sleep(50 * time.Millisecond)
-		return nil
-	}, db, cache) // Server depends on DB and Cache
-
-	lc.Add(cache, func() error {
-		fmt.Println("Closing Cache connection")
-		time.Sleep(100 * time.Millisecond)
-		return nil
-	})
-
-	lc.Finish() // Must be called to build the dependency graph before shutdown
-
-	if err := lc.Shutdown(); err != nil {
-		fmt.Printf("Shutdown failed: %v\n", err)
-	}
-}
-```
-
 ## Known Issues and Limitations
 
 This library is currently in an early stage of development, and there are several known limitations and areas for improvement:
 
-- **Concurrency Primitives:** There is a potential for misuse of `sync.WaitGroup` and channels, which might lead to race conditions or deadlocks in edge cases.
-- **Error Propagation:** Error handling is not fully robust. Errors that occur late in the shutdown process might not be caught and propagated correctly.
 - **Context Cancellation:** The `Shutdown` function in `LifecycleParallel` accepts a `context.Context` but does not currently use it to handle cancellations or timeouts.
 - **Non-Deterministic Order:** For components at the same level of the dependency graph (i.e., with the same number of dependencies), the shutdown order is not guaranteed.
 - **No Cycle Detection:** The library does not detect circular dependencies, which will lead to a deadlock during the shutdown process.
